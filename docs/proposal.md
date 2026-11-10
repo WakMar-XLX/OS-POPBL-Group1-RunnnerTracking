@@ -126,11 +126,11 @@ flowchart LR
 
 | Area | Member |
 |---|---|
-| Round Robin and PCB structure | (name) |
-| Priority scheduling and aging | (name) |
-| Runner state simulation | (name) |
-| Dashboard and charts | (name) |
-| Testing, documentation and poster | (name) |
+| Round Robin and PCB structure | (Muhammad Ammar Bin Suandi Halil) |
+| Priority scheduling and aging | (Haris Sharafuddin bin Anuar) |
+| Runner state simulation | (Amir Wafiq bin Mohd Roslan) |
+| Dashboard and charts | (Emir Sulaiman bin Khairul Faizi ) |
+| Testing, documentation and poster | ( Mohammad Asyraf Khuzairie bin Hamzani ) |
 
 Every member commits to the repository under their own account, and each member should be able to explain the whole program during the demo, not only their own part.
 
