@@ -107,3 +107,6 @@ def runners_released(waves, result, k, t):
     done = sum(max(0, min(t, s["end"]) - s["start"])
                for s in result["slices"] if s["type"] == "run" and s["wave"] == k)
     return round(waves[k].runners * done / waves[k].burst)
+
+
+def schedule(waves, algo, quantum=5, switch=1, aging_step=0):
