@@ -1,67 +1,47 @@
-"""
-Modul: Priority Scheduling and Aging Simulation
-Projek: OS-POPBL-Group1-RunnerTracking
-Penerangan: Fail ini mengandungi logik penjadualan keutamaan (priority scheduling) 
-            berserta mekanisma aging untuk memastikan tugas yang menunggu lama 
-            mendapat keutamaan secara beransur-ansur.
-"""
+class Runner:
+    def __init__(self, runner_id, category_priority, distance_km):
+        self.runner_id = runner_id         # Participant ID / Bib Number
+        self.priority = category_priority  # Priority Level (e.g., 3=VIP/OKU/Medical, 2=Senior, 1=Open)
+        self.burst_time = distance_km      # Distance or service duration required
+        self.waiting_time = 0              # Time spent waiting in the queue
 
-class Task:
-    def __init__(self, task_id, priority, burst_time):
-        self.task_id = task_id          # ID Unik untuk setiap tugas / proses
-        self.priority = priority          # Tahap keutamaan (Nombor lebih tinggi = Keutamaan lebih tinggi)
-        self.burst_time = burst_time      # Masa pemprosesan yang diperlukan
-        self.waiting_time = 0             # Masa menunggu dalam barisan
-
-def priority_scheduling_with_aging(tasks):
+def community_run_scheduler(runners):
     print("==================================================")
-    print("      SIMULASI PRIORITY SCHEDULING & AGAGING      ")
+    print("      COMMUNITY RUN PARTICIPANT SCHEDULER         ")
     print("==================================================")
     
-    execution_step = 1
-    
-    # Teruskan gelung selagi masih ada tugas di dalam senarai
-    while tasks:
-        print(f"\n--- Pusingan (Step) {execution_step} ---")
+    step = 1
+    while runners:
+        # Sort runners by highest priority first (higher number = higher priority)
+        runners.sort(key=lambda x: x.priority, reverse=True)
         
-        # 1. Susun senarai tugas:
-        # - Keutamaan (priority) tertinggi diutamakan dulu (reverse=True)
-        # - Jika priority sama, pilih tugas yang mempunyai masa menunggu (waiting_time) paling lama
-        tasks.sort(key=lambda x: (x.priority, x.waiting_time), reverse=True)
-        
-        # Paparkan status barisan semasa
-        print("Status Barisan Semasa (Queue):")
-        for t in tasks:
-            print(f" -> Task ID: {t.task_id} | Priority: {t.priority} | Waiting Time: {t.waiting_time}")
-
-        # 2. Ambil tugas teratas untuk dilaksana
-        current_task = tasks.pop(0)
-        print(f"\n[EXECUTION] Melaksanakan **Task {current_task.task_id}** "
-              f"(Priority Asal: {current_task.priority}, Masa Menunggu: {current_task.waiting_time})")
-        
-        # 3. Mekanisme Aging untuk tugas lain yang masih tinggal dalam barisan
-        for t in tasks:
-            t.waiting_time += 1  # Tambah masa menunggu untuk tugas yang belum diproses
+        print(f"\n--- Simulation Step {step} ---")
+        print("Current Queue Status:")
+        for r in runners:
+            print(f" -> Bib #{r.runner_id} | Priority: {r.priority} | Waiting Time: {r.waiting_time}")
             
-            # Jika masa menunggu mencapai ambang (threshold) tertentu, cth: >= 2 pusingan
-            if t.waiting_time >= 2:
-                t.priority += 1  # Tingkatkan tahap priority (Aging)
-                print(f"   -> [AGING ALERT] Task {t.task_id} terbiar terlalu lama. Priority dinaikkan ke **{t.priority}**!")
-                t.waiting_time = 0  # Reset masa menunggu selepas kenaikan priority
+        # Pop the runner with the highest priority from the front of the queue
+        current_runner = runners.pop(0)
+        print(f"\n[PROCESSING] Attending / Flagging off **Bib #{current_runner.runner_id}** (Current Priority: {current_runner.priority})")
         
-        execution_step += 1
+        # Aging Mechanism: Increment waiting time for remaining runners and boost priority if waiting too long
+        for r in runners:
+            r.waiting_time += 1
+            # If waiting for 2 or more steps, increase priority to prevent starvation
+            if r.waiting_time >= 2 and r.priority < 3:
+                r.priority += 1
+                print(f"   -> [AGING ALERT] Bib #{r.runner_id} has waited too long. Priority boosted to **{r.priority}**!")
+                
+        step += 1
 
-    print("\n==================================================")
-    print("      Semua tugas telah berjaya diselesaikan!     ")
-    print("==================================================")
-
-# Blok utama untuk menguji simulasi
+# --- MAIN EXECUTION / TEST SIMULATION ---
 if __name__ == "__main__":
-    # Contoh data awal tugas (Anda boleh ubah nilai priority & burst time mengikut keperluan)
-    initial_tasks = [
-        Task(task_id=101, priority=1, burst_time=5),
-        Task(task_id=102, priority=3, burst_time=3),
-        Task(task_id=103, priority=2, burst_time=4)
+    # Sample participants with different priority categories
+    # Priority Legend: 1 = Open Category, 2 = Veteran/Senior, 3 = Special Assistance / VIP / Emergency
+    run_participants = [
+        Runner(runner_id=101, category_priority=1, distance_km=5),
+        Runner(runner_id=102, category_priority=3, distance_km=2),
+        Runner(runner_id=103, category_priority=2, distance_km=4)
     ]
     
-    priority_scheduling_with_aging(initial_tasks)
+    community_run_scheduler(run_participants)
