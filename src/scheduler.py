@@ -21,17 +21,22 @@ class Wave:
     runners: int    # number of runners in the wave
 
 
-def schedule(waves, algo, quantum=5, switch=1):
+def schedule(waves, algo, quantum=5, switch=1, aging_step=0):
     """Run one scheduling algorithm and return slices plus metrics.
 
     switch = minutes needed to clear the line between two different
     waves (this is the context switch time).
+
+    aging_step = Priority scheduling only. Every aging_step minutes a wave
+    waits in the ready queue, its priority number drops by 1 (so it becomes
+    more important). 0 means aging is off.
     """
     n = len(waves)
     t = 0                      # simulation clock
     last = -1                  # wave that used the line last
     remaining = [w.burst for w in waves]
     added = [False] * n        # has the wave joined the ready queue yet?
+    joined = [0] * n           # minute the wave last joined the ready queue (for aging)
     ready = []                 # ready queue (list of wave indexes)
     slices = []                # Gantt chart data
     first_start = {}
@@ -42,6 +47,7 @@ def schedule(waves, algo, quantum=5, switch=1):
         for k, w in enumerate(waves):
             if not added[k] and w.arrival <= t:
                 added[k] = True
+                joined[k] = w.arrival      # it has been waiting since it arrived
                 ready.append(k)
 
     while len(completion) < n:
@@ -55,8 +61,13 @@ def schedule(waves, algo, quantum=5, switch=1):
         # Priority takes the smallest priority number.
         pick = 0
         if algo == "Priority":
+            def effective(k):
+                """Priority number after aging (smaller = more important)."""
+                if aging_step > 0:
+                    return waves[k].priority - (t - joined[k]) // aging_step
+                return waves[k].priority
             pick = min(range(len(ready)),
-                       key=lambda j: (waves[ready[j]].priority, waves[ready[j]].arrival))
+                       key=lambda j: (effective(ready[j]), waves[ready[j]].arrival))
         i = ready.pop(pick)
 
         # Context switch: clear the line before a different wave starts.
@@ -73,6 +84,7 @@ def schedule(waves, algo, quantum=5, switch=1):
         last = i
         admit()                            # arrivals go in BEFORE the preempted wave
         if remaining[i] > 0:
+            joined[i] = t                  # waiting time for aging restarts
             ready.append(i)                # back of the queue
         else:
             completion[i] = t
@@ -107,6 +119,3 @@ def runners_released(waves, result, k, t):
     done = sum(max(0, min(t, s["end"]) - s["start"])
                for s in result["slices"] if s["type"] == "run" and s["wave"] == k)
     return round(waves[k].runners * done / waves[k].burst)
-
-
-def schedule(waves, algo, quantum=5, switch=1, aging_step=0):
